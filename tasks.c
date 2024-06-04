@@ -176,39 +176,45 @@ void modifyTask(TData* data, int index) {
 }
 
 void deleteTask(TData* data, int index) {
-
     if (isEmpty(data)) {
-        printf("\nThe list is empty.");
-    } else {
-        index--;
-        int i = index;
-    
-        for (; i < (*data).elements; i++) {
-            (*data).tasks[i] = (*data).tasks[i + 1];
-        }
-        
-        (*data).elements--;
-        printf("\nTask at index %d was deleted successfully!\n", ++index);
+        printf("\nLa lista está vacía.\n");
+        return;
     }
+
+    if (index < 1 || index > data->elements) {
+        printf("\nÍndice fuera de rango.\n");
+        return;
+    }
+
+    index--;
+    for (int i = index; i < data->elements - 1; i++) {
+        data->tasks[i] = data->tasks[i + 1];
+    }
+    data->elements--;
+
+    printf("\n¡La tarea en el índice %d fue eliminada con éxito!\n", index + 1);
 }
+
 
 void showTasks(TData* data) {
-
     if (isEmpty(data)) {
-        printf("\nThe list is empty.");
-    } else {
-        printf("\nTasks: \n");
-        for (int i = 0; i < (*data).elements; i++) {
-            printf("\n-----------------------------------\n");
-            printf("Description: %s\n", (*data).tasks[i].description);
-            printf("Duty manager: %s\n", (*data).tasks[i].dutyManager);
-            printf("Priority (1 is high, 0 is low): %d\n", (int) (*data).tasks[i].priority);
-            printf("Creation date: %d/%d/%d \n", (*data).tasks[i].creationDate.day, (*data).tasks[i].creationDate.month, (*data).tasks[i].creationDate.year);
-            printf("Due date: %d/%d/%d", (*data).tasks[i].dueDate.day, (*data).tasks[i].dueDate.month, (*data).tasks[i].dueDate.year);
-            printf("\n-----------------------------------\n");
-        }
+        printf("\nLa lista está vacía.\n");
+        return;
+    }
+
+    printf("\nTareas:\n");
+    for (int i = 0; i < data->elements; i++) {
+        TTask task = data->tasks[i];
+        printf("\n-----------------------------------\n");
+        printf("Descripción: %s\n", task.description);
+        printf("Manager responsable: %s\n", task.dutyManager);
+        printf("Prioridad (1 es alta, 0 es baja): %d\n", task.priority);
+        printf("Fecha de creación: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
+        printf("Fecha de vencimiento: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
+        printf("-----------------------------------\n");
     }
 }
+
 
 void urgentTasks(TData* data){}
 
