@@ -69,13 +69,13 @@ int main() {
                 break;
 
             case 2:
-                printf("\nInput the index in which the desired expense to be modified is: ");
+                printf("\nIngrese el índice de la tarea a modificar: ");
                 scanf("%d", &index);
                 modifyTask(&data, index);
                 break;
 
             case 3:
-                printf("\nInput the index in which the desired expense to be deleted is: ");
+                printf("\nIngrese el índice de la tarea a eliminar:");
                 scanf("%d", &index);
                 deleteTask(&data, index);
                 break;
@@ -96,8 +96,8 @@ int main() {
                 return 0;
                 break;
             
-            default: // option is not between 1 and 9.
-                printf("\nInvalid option.\n");
+            default: // option is not between 1 and 7.
+                printf("\nOpción no válida\n");
                 break;
 
         }
@@ -106,21 +106,11 @@ int main() {
 
 
 bool isFull(TData* data){
-    // if the amount of elements in the array is equal to NMAX, it returns True.
-    if ((*data).elements == NMAX){
-        return true;
-    }else{
-        return false;
-    }
+    return data->elements == NMAX;
 }
 
 bool isEmpty(TData* data){
-    // if the amount of elements in the array is equal to 0, it returns True.
-    if ((*data).elements == 0){
-        return true;
-    }else{
-        return false;
-    }
+    return data->elements == 0;
 }
 
 void newTask(TData* data, TDate* date){
@@ -130,9 +120,9 @@ void newTask(TData* data, TDate* date){
     TDate creationDate;
     TDate dueDate;
 
-    if(isFull(data)){
+    if (isFull(data)) {
         printf("\nThe list is full.");
-    }else{
+    } else {
         //data is asked to the user and stored in local variables.    
         printf("\nNew tasks' description: ");
         scanf(" %s", description);
@@ -147,7 +137,7 @@ void newTask(TData* data, TDate* date){
         printf("Input this task due date year: ");
         scanf("%d", &dueDate.year);
 
-        if (priority == 1){
+        if (priority == 1) {
             int j;
             //I shift every element forward to make room for the new expense.
             for (j = (*data).elements; j > 0; j--){
@@ -167,17 +157,17 @@ void newTask(TData* data, TDate* date){
             (*data).elements++;
             printf("\nNew expense added successfully!\n");
 
-        }else{
+        } else {
             int i, pos;
             //this loop will traverse the array until it founds the first variable expense.
-            for (i = 0; i < NMAX; i++){
-                if ((*data).tasks[i].priority != 1){
+            for (i = 0; i < NMAX; i++) {
+                if ((*data).tasks[i].priority != 1) {
                     break;
                 }    
             }
             pos = i;
             //I shift every element forward to make room for the new expense.
-            for (int j = (*data).elements; j >= pos; j--){
+            for (int j = (*data).elements; j >= pos; j--) {
                 (*data).tasks[j] = (*data).tasks[j - 1];
             }
             //store the data in the empty place
@@ -197,14 +187,14 @@ void newTask(TData* data, TDate* date){
     }
 }
 
-void modifyTask(TData* data, int index){
+void modifyTask(TData* data, int index) {
     char description[LMAX];
     char dutyManager[LMAX];
     TDate dueDate;
 
-    if(isEmpty(data)){
+    if (isEmpty(data)) {
         printf("\nThe list is empty.");
-    }else{
+    } else {
         index--;
         printf("\nNew tasks' description: ");
         scanf("%s", description);
@@ -226,15 +216,15 @@ void modifyTask(TData* data, int index){
     }
 }
 
-void deleteTask(TData* data, int index){
+void deleteTask(TData* data, int index) {
 
-    if(isEmpty(data)){
+    if (isEmpty(data)) {
         printf("\nThe list is empty.");
-    }else{
+    } else {
         index--;
         int i = index;
     
-        for (; i < (*data).elements; i++){
+        for (; i < (*data).elements; i++) {
             (*data).tasks[i] = (*data).tasks[i + 1];
         }
         
@@ -243,13 +233,13 @@ void deleteTask(TData* data, int index){
     }
 }
 
-void showTasks(TData* data){
+void showTasks(TData* data) {
 
-    if(isEmpty(data)){
+    if (isEmpty(data)) {
         printf("\nThe list is empty.");
-    }else{
+    } else {
         printf("\nTasks: \n");
-        for (int i = 0; i < (*data).elements; i++){
+        for (int i = 0; i < (*data).elements; i++) {
             printf("\n-----------------------------------\n");
             printf("Description: %s\n", (*data).tasks[i].description);
             printf("Duty manager: %s\n", (*data).tasks[i].dutyManager);
