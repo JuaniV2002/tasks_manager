@@ -147,32 +147,32 @@ void newTask(TData* data, TDate* date) {
 }
 
 void modifyTask(TData* data, int index) {
-    char description[LMAX];
-    char dutyManager[LMAX];
-    TDate dueDate;
-
     if (isEmpty(data)) {
-        printf("\nThe list is empty.");
-    } else {
-        index--;
-        printf("\nNew tasks' description: ");
-        scanf("%s", description);
-        printf("New tasks' duty manager: ");
-        scanf("%s", dutyManager);
-        printf("New tasks' due date day: ");
-        scanf("%d", &dueDate.day);
-        printf("New tasks' due date month: ");
-        scanf("%d", &dueDate.month);
-        printf("New tasks' due date year: ");
-        scanf("%d", &dueDate.year);
-
-        strcpy((*data).tasks[index].description, description);
-        strcpy((*data).tasks[index].dutyManager, dutyManager);
-        (*data).tasks[index].dueDate.day = dueDate.day;
-        (*data).tasks[index].dueDate.month = dueDate.month;
-        (*data).tasks[index].dueDate.year = dueDate.year;
-        printf("\nThe task at index %d was modified successfully!\n", ++index);
+        printf("\nLa lista está vacía.\n");
+        return;
     }
+
+    if (index < 1 || index > data->elements) {
+        printf("\nÍndice fuera de rango.\n");
+        return;
+    }
+
+    index--;
+    TTask* task = &data->tasks[index];
+    printf("\nNueva descripción de la tarea: ");
+    scanf(" %99[^\n]", task->description);
+    printf("Nuevo manager a cargo de la tarea: ");
+    scanf(" %99[^\n]", task->dutyManager);
+    printf("Nueva prioridad (1 es alta, 0 es baja): ");
+    scanf("%d", &task->priority);
+    printf("Nueva fecha de vencimiento (día): ");
+    scanf("%d", &task->dueDate.day);
+    printf("Nueva fecha de vencimiento (mes): ");
+    scanf("%d", &task->dueDate.month);
+    printf("Nueva fecha de vencimiento (año): ");
+    scanf("%d", &task->dueDate.year);
+
+    printf("\n¡La tarea en el índice %d fue modificada con éxito!\n", index + 1);
 }
 
 void deleteTask(TData* data, int index) {
