@@ -34,33 +34,31 @@ void showTasks(TData* data);
 void urgentTasks(TData* data);
 void managerTasks(TData* data);
 
-TData data;
-TDate date;
-
 int main() {
-    int option;
-    int index;
-    int month;
+    
+    TData data = { .elements = 0 };
+    TDate date;
+    int option, index, month;
 
-    printf("\nInput today's day: ");
+    printf("\nIngresa el día de hoy: ");
     scanf("%d", &date.day);
-    printf("Input today's month: ");
+    printf("Ingresa el mes: de hoy: ");
     scanf("%d", &date.month);
-    printf("Input today's year: ");
+    printf("Ingresa el año de hoy: ");
     scanf("%d", &date.year);
 
-    do{
+    do {
         //menu that will be displayed everytime the user runs the program
         printf("\n-----------------------------------\n");
-        printf("New task (1)\n");
-        printf("Modify a task (2)\n");
-        printf("Delete a task (3)\n");
-        printf("Show tasks (4)\n");
-        printf("Urgent tasks (5)\n");
-        printf("Manager tasks' (6)\n");
-        printf("Save and exit (7)");
+        printf("Nueva tarea (1)\n");
+        printf("Modificar una tarea (2)\n");
+        printf("Borrar una tarea (3)\n");
+        printf("Mostrar tareas (4)\n");
+        printf("Tareas urgentes (5)\n");
+        printf("Tareas del manager (6)\n");
+        printf("Salir (7)");
         printf("\n-----------------------------------\n");
-        printf("Input an option: ");
+        printf("Ingresa una opción: ");
         fflush(stdout); fflush(stdin);
         scanf("%d", &option);
         fflush(stdin);
