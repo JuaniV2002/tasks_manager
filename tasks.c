@@ -243,4 +243,33 @@ void urgentTasks(TData* data) {
     }
 }
 
-void managerTasks(TData* data){}
+void managerTasks(TData* data) {
+    if (isEmpty(data)) {
+        printf("\nLa lista está vacía.\n");
+        return;
+    }
+
+    char managerName[LMAX];
+    printf("Ingrese el nombre del manager: ");
+    scanf(" %s", managerName);
+
+    printf("\nTareas para el manager %s:\n", managerName);
+    bool found = false;
+    for (int i = 0; i < data->elements; i++) {
+        if (strcmp(data->tasks[i].dutyManager, managerName) == 0) {
+            TTask task = data->tasks[i];
+            printf("\n-----------------------------------\n");
+            printf("Descripción: %s\n", task.description);
+            printf("Manager responsable: %s\n", task.dutyManager);
+            printf("Prioridad (1 es alta, 0 es baja): %d\n", task.priority);
+            printf("Fecha de creación: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
+            printf("Fecha de vencimiento: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
+            printf("-----------------------------------\n");
+            found = true;
+        }
+    }
+
+    if (!found) {
+        printf("No hay tareas para el manager %s.\n", managerName);
+    }
+}
