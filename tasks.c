@@ -33,6 +33,7 @@ void deleteTask(TData* data, int index);
 void showTasks(TData* data);
 void urgentTasks(TData* data);
 void managerTasks(TData* data);
+void saveTasksToFile(TData* data, const char* filename);
 
 int main() {
     TData data = { .elements = 0 };
@@ -55,7 +56,8 @@ int main() {
         printf("Mostrar tareas (4)\n");
         printf("Tareas urgentes (5)\n");
         printf("Tareas del manager (6)\n");
-        printf("Salir (7)\n");
+        printf("Guardar tareas en archivo (7)\n");
+        printf("Salir (8)\n");
         printf("-----------------------------------\n");
         printf("Ingresa una opción: ");
         fflush(stdout); fflush(stdin);
@@ -64,7 +66,7 @@ int main() {
 
         switch (option) {
             case 1:
-                newTask(&data, &date);    
+                newTask(&data, &date);
                 break;
             case 2:
                 printf("\nIngrese el índice de la tarea a modificar: ");
@@ -76,16 +78,19 @@ int main() {
                 scanf("%d", &index);
                 deleteTask(&data, index);
                 break;
-            case 4: 
+            case 4:
                 showTasks(&data);
                 break;
-            case 5: 
+            case 5:
                 urgentTasks(&data);
                 break;
             case 6:
                 managerTasks(&data);
                 break;
             case 7:
+                saveTasksToFile(&data, "tasks.txt");
+                break;
+            case 8:
                 return 0;
             default:
                 printf("\nOpción no válida\n");
@@ -195,7 +200,6 @@ void deleteTask(TData* data, int index) {
     printf("\n¡La tarea en el índice %d fue eliminada con éxito!\n", index + 1);
 }
 
-
 void showTasks(TData* data) {
     if (isEmpty(data)) {
         printf("\nLa lista está vacía.\n");
@@ -214,7 +218,6 @@ void showTasks(TData* data) {
         printf("-----------------------------------\n");
     }
 }
-
 
 void urgentTasks(TData* data) {
     if (isEmpty(data)) {
@@ -251,7 +254,7 @@ void managerTasks(TData* data) {
 
     char managerName[LMAX];
     printf("Ingrese el nombre del manager: ");
-    scanf(" %s", managerName);
+    scanf(" %99[^\n]", managerName);
 
     printf("\nTareas para el manager %s:\n", managerName);
     bool found = false;
@@ -272,4 +275,25 @@ void managerTasks(TData* data) {
     if (!found) {
         printf("No hay tareas para el manager %s.\n", managerName);
     }
+}
+
+void saveTasksToFile(TData* data, const char* filename) {
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("\nError al abrir el archivo para escribir.\n");
+        return;
+    }
+
+    for (int i = 0; i < data->elements; i++) {
+        TTask task = data->tasks[i];
+        fprintf(file, "Descripción: %s\n", task.description);
+        fprintf(file, "Manager responsable: %s\n", task.dutyManager);
+        fprintf(file, "Prioridad: %d\n", task.priority);
+        fprintf(file, "Fecha de creación: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
+        fprintf(file, "Fecha de vencimiento: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
+        fprintf(file, "-----------------------------------\n");
+    }
+
+    fclose(file);
+    printf("\n¡Tareas guardadas en el archivo %s con éxito!\n", filename);
 }
