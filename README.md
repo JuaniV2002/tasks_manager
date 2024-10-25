@@ -16,7 +16,7 @@ To give this program a try on Linux:
   ```
   or if you are on mac using homebrew:
   ```
-  brew update
+  brew update && brew upgrade
   brew install gcc
   ```
 - Check C compiler version to verify a successful installation:
