@@ -1,3 +1,4 @@
+// Enhanced Task Manager with basic improvements
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -5,6 +6,10 @@
 
 #define NMAX 100
 #define LMAX 100
+
+#define RED "\033[1;31m"
+#define GREEN "\033[1;32m"
+#define RESET "\033[0m"
 
 typedef struct Date {
     int day;
@@ -34,21 +39,23 @@ void showTasks(TData* data);
 void urgentTasks(TData* data);
 void managerTasks(TData* data);
 void saveTasksToFile(TData* data, const char* filename);
+void loadTasksFromFile(TData* data, const char* filename);
+int compareDueDates(const void* a, const void* b);
+void showTasksSortedByDueDate(TData* data);
 
 int main() {
     TData data = { .elements = 0 };
     TDate date;
     int option, index;
 
-    printf("\nIngresa el día de hoy: ");
+    printf("\nIngresa el d\u00eda de hoy: ");
     scanf("%d", &date.day);
     printf("Ingresa el mes de hoy: ");
     scanf("%d", &date.month);
-    printf("Ingresa el año de hoy: ");
+    printf("Ingresa el a\u00f1o de hoy: ");
     scanf("%d", &date.year);
 
     do {
-        // Menú que se mostrará cada vez que se ejecute el programa
         printf("\n-----------------------------------\n");
         printf("Nueva tarea (1)\n");
         printf("Modificar una tarea (2)\n");
@@ -57,24 +64,24 @@ int main() {
         printf("Tareas urgentes (5)\n");
         printf("Tareas del manager (6)\n");
         printf("Guardar tareas en archivo (7)\n");
-        printf("Salir (8)\n");
+        printf("Cargar tareas desde archivo (8)\n");
+        printf("Mostrar tareas ordenadas por vencimiento (9)\n");
+        printf("Salir (10)\n");
         printf("-----------------------------------\n");
-        printf("Ingresa una opción: ");
-        fflush(stdout); fflush(stdin);
+        printf("Ingresa una opci\u00f3n: ");
         scanf("%d", &option);
-        fflush(stdin);
 
         switch (option) {
             case 1:
                 newTask(&data, &date);
                 break;
             case 2:
-                printf("\nIngrese el índice de la tarea a modificar: ");
+                printf("\nIngrese el \u00edndice de la tarea a modificar: ");
                 scanf("%d", &index);
                 modifyTask(&data, index);
                 break;
             case 3:
-                printf("\nIngrese el índice de la tarea a eliminar: ");
+                printf("\nIngrese el \u00edndice de la tarea a eliminar: ");
                 scanf("%d", &index);
                 deleteTask(&data, index);
                 break;
@@ -91,9 +98,15 @@ int main() {
                 saveTasksToFile(&data, "tasks.txt");
                 break;
             case 8:
+                loadTasksFromFile(&data, "tasks.txt");
+                break;
+            case 9:
+                showTasksSortedByDueDate(&data);
+                break;
+            case 10:
                 return 0;
             default:
-                printf("\nOpción no válida\n");
+                printf("\nOpcion no valida\n");
                 break;
         }
     } while (1);
@@ -109,22 +122,22 @@ bool isEmpty(TData* data) {
 
 void newTask(TData* data, TDate* date) {
     if (isFull(data)) {
-        printf("\nLa lista está llena.\n");
+        printf("\nLa lista est\u00e1 llena.\n");
         return;
     }
 
     TTask new_task;
-    printf("\nDescripción de la nueva tarea: ");
+    printf("\nDescripci\u00f3n de la nueva tarea: ");
     scanf(" %99[^\n]", new_task.description);
     printf("Manager a cargo de la nueva tarea: ");
     scanf(" %99[^\n]", new_task.dutyManager);
     printf("Prioridad (1 es alta, 0 es baja): ");
     scanf("%d", &new_task.priority);
-    printf("Fecha de vencimiento (día): ");
+    printf("Fecha de vencimiento (d\u00eda): ");
     scanf("%d", &new_task.dueDate.day);
     printf("Fecha de vencimiento (mes): ");
     scanf("%d", &new_task.dueDate.month);
-    printf("Fecha de vencimiento (año): ");
+    printf("Fecha de vencimiento (a\u00f1o): ");
     scanf("%d", &new_task.dueDate.year);
 
     new_task.creationDate = *date;
@@ -148,80 +161,87 @@ void newTask(TData* data, TDate* date) {
     }
 
     data->elements++;
-    printf("\n¡Nueva tarea añadida con éxito!\n");
+    printf("\n\u00a1Nueva tarea a\u00f1adida con \u00e9xito!\n");
 }
 
 void modifyTask(TData* data, int index) {
     if (isEmpty(data)) {
-        printf("\nLa lista está vacía.\n");
+        printf("\nLa lista est\u00e1 vac\u00eda.\n");
         return;
     }
 
     if (index < 1 || index > data->elements) {
-        printf("\nÍndice fuera de rango.\n");
+        printf("\n\u00cdndice fuera de rango.\n");
         return;
     }
 
     index--;
     TTask* task = &data->tasks[index];
-    printf("\nNueva descripción de la tarea: ");
+    printf("\nNueva descripci\u00f3n de la tarea: ");
     scanf(" %99[^\n]", task->description);
     printf("Nuevo manager a cargo de la tarea: ");
     scanf(" %99[^\n]", task->dutyManager);
     printf("Nueva prioridad (1 es alta, 0 es baja): ");
     scanf("%d", &task->priority);
-    printf("Nueva fecha de vencimiento (día): ");
+    printf("Nueva fecha de vencimiento (d\u00eda): ");
     scanf("%d", &task->dueDate.day);
     printf("Nueva fecha de vencimiento (mes): ");
     scanf("%d", &task->dueDate.month);
-    printf("Nueva fecha de vencimiento (año): ");
+    printf("Nueva fecha de vencimiento (a\u00f1o): ");
     scanf("%d", &task->dueDate.year);
 
-    printf("\n¡La tarea en el índice %d fue modificada con éxito!\n", index + 1);
+    printf("\n\u00a1La tarea en el \u00edndice %d fue modificada con \u00e9xito!\n", index + 1);
 }
 
 void deleteTask(TData* data, int index) {
     if (isEmpty(data)) {
-        printf("\nLa lista está vacía.\n");
+        printf("\nLa lista est\u00e1 vac\u00eda.\n");
         return;
     }
 
     if (index < 1 || index > data->elements) {
-        printf("\nÍndice fuera de rango.\n");
+        printf("\n\u00cdndice fuera de rango.\n");
         return;
     }
 
     index--;
+    printf("\n\u00bfEst\u00e1s seguro que quer\u00e9s borrar la tarea '%s'? (s/n): ", data->tasks[index].description);
+    char confirm;
+    scanf(" %c", &confirm);
+    if (confirm != 's' && confirm != 'S') {
+        printf("\nEliminaci\u00f3n cancelada.\n");
+        return;
+    }
+
     for (int i = index; i < data->elements - 1; i++) {
         data->tasks[i] = data->tasks[i + 1];
     }
     data->elements--;
 
-    printf("\n¡La tarea en el índice %d fue eliminada con éxito!\n", index + 1);
+    printf("\n\u00a1La tarea fue eliminada con \u00e9xito!\n");
 }
 
 void showTasks(TData* data) {
     if (isEmpty(data)) {
-        printf("\nLa lista está vacía.\n");
+        printf("\nLa lista est\u00e1 vac\u00eda.\n");
         return;
     }
 
     printf("\nTareas:\n");
     for (int i = 0; i < data->elements; i++) {
         TTask task = data->tasks[i];
-        printf("\n-----------------------------------\n");
-        printf("Descripción: %s\n", task.description);
+        printf("\n[%d]\n", i + 1);
+        printf("Descripci\u00f3n: %s\n", task.description);
         printf("Manager responsable: %s\n", task.dutyManager);
-        printf("Prioridad (1 es alta, 0 es baja): %d\n", task.priority);
-        printf("Fecha de creación: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
+        printf("Prioridad: %s\n", task.priority ? "Alta" : "Baja");
+        printf("Fecha de creaci\u00f3n: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
         printf("Fecha de vencimiento: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
-        printf("-----------------------------------\n");
     }
 }
 
 void urgentTasks(TData* data) {
     if (isEmpty(data)) {
-        printf("\nLa lista está vacía.\n");
+        printf("\nLa lista est\u00e1 vac\u00eda.\n");
         return;
     }
 
@@ -230,13 +250,12 @@ void urgentTasks(TData* data) {
     for (int i = 0; i < data->elements; i++) {
         if (data->tasks[i].priority == 1) {
             TTask task = data->tasks[i];
-            printf("\n-----------------------------------\n");
-            printf("Descripción: %s\n", task.description);
+            printf("\n%s[%d]%s\n", RED, i + 1, RESET);
+            printf("Descripci\u00f3n: %s\n", task.description);
             printf("Manager responsable: %s\n", task.dutyManager);
             printf("Prioridad: Alta\n");
-            printf("Fecha de creación: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
+            printf("Fecha de creaci\u00f3n: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
             printf("Fecha de vencimiento: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
-            printf("-----------------------------------\n");
             found = true;
         }
     }
@@ -248,7 +267,7 @@ void urgentTasks(TData* data) {
 
 void managerTasks(TData* data) {
     if (isEmpty(data)) {
-        printf("\nLa lista está vacía.\n");
+        printf("\nLa lista est\u00e1 vac\u00eda.\n");
         return;
     }
 
@@ -261,13 +280,12 @@ void managerTasks(TData* data) {
     for (int i = 0; i < data->elements; i++) {
         if (strcmp(data->tasks[i].dutyManager, managerName) == 0) {
             TTask task = data->tasks[i];
-            printf("\n-----------------------------------\n");
-            printf("Descripción: %s\n", task.description);
+            printf("\n[%d]\n", i + 1);
+            printf("Descripci\u00f3n: %s\n", task.description);
             printf("Manager responsable: %s\n", task.dutyManager);
-            printf("Prioridad (1 es alta, 0 es baja): %d\n", task.priority);
-            printf("Fecha de creación: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
+            printf("Prioridad: %s\n", task.priority ? "Alta" : "Baja");
+            printf("Fecha de creaci\u00f3n: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
             printf("Fecha de vencimiento: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
-            printf("-----------------------------------\n");
             found = true;
         }
     }
@@ -279,21 +297,73 @@ void managerTasks(TData* data) {
 
 void saveTasksToFile(TData* data, const char* filename) {
     FILE* file = fopen(filename, "w");
-    if (file == NULL) {
-        printf("\nError al abrir el archivo para escribir.\n");
+    if (!file) {
+        printf("\nError al abrir el archivo.\n");
+        return;
+    }
+    for (int i = 0; i < data->elements; i++) {
+        TTask t = data->tasks[i];
+        fprintf(file, "%s\n%s\n%d\n%d %d %d\n%d %d %d\n",
+                t.description, t.dutyManager, t.priority,
+                t.creationDate.day, t.creationDate.month, t.creationDate.year,
+                t.dueDate.day, t.dueDate.month, t.dueDate.year);
+    }
+    fclose(file);
+    printf("\n\u00a1Tareas guardadas con \u00e9xito!\n");
+}
+
+void loadTasksFromFile(TData* data, const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        printf("\nArchivo no encontrado.\n");
+        return;
+    }
+    data->elements = 0;
+    while (!feof(file) && data->elements < NMAX) {
+        TTask* t = &data->tasks[data->elements];
+        if (fgets(t->description, LMAX, file) == NULL) break;
+        t->description[strcspn(t->description, "\n")] = 0;
+        fgets(t->dutyManager, LMAX, file);
+        t->dutyManager[strcspn(t->dutyManager, "\n")] = 0;
+        fscanf(file, "%d", &t->priority);
+        fscanf(file, "%d %d %d", &t->creationDate.day, &t->creationDate.month, &t->creationDate.year);
+        fscanf(file, "%d %d %d", &t->dueDate.day, &t->dueDate.month, &t->dueDate.year);
+        fgetc(file); // Skip newline
+        data->elements++;
+    }
+    fclose(file);
+    printf("\n\u00a1Tareas cargadas desde archivo!\n");
+}
+
+int compareDueDates(const void* a, const void* b) {
+    const TTask* t1 = (const TTask*)a;
+    const TTask* t2 = (const TTask*)b;
+
+    if (t1->dueDate.year != t2->dueDate.year)
+        return t1->dueDate.year - t2->dueDate.year;
+    if (t1->dueDate.month != t2->dueDate.month)
+        return t1->dueDate.month - t2->dueDate.month;
+    return t1->dueDate.day - t2->dueDate.day;
+}
+
+void showTasksSortedByDueDate(TData* data) {
+    if (isEmpty(data)) {
+        printf("\nLa lista est\u00e1 vac\u00eda.\n");
         return;
     }
 
-    for (int i = 0; i < data->elements; i++) {
-        TTask task = data->tasks[i];
-        fprintf(file, "Descripción: %s\n", task.description);
-        fprintf(file, "Manager responsable: %s\n", task.dutyManager);
-        fprintf(file, "Prioridad: %d\n", task.priority);
-        fprintf(file, "Fecha de creación: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
-        fprintf(file, "Fecha de vencimiento: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
-        fprintf(file, "-----------------------------------\n");
-    }
+    TTask sorted[NMAX];
+    memcpy(sorted, data->tasks, sizeof(TTask) * data->elements);
+    qsort(sorted, data->elements, sizeof(TTask), compareDueDates);
 
-    fclose(file);
-    printf("\n¡Tareas guardadas en el archivo %s con éxito!\n", filename);
+    printf("\nTareas ordenadas por fecha de vencimiento:\n");
+    for (int i = 0; i < data->elements; i++) {
+        TTask t = sorted[i];
+        printf("\n[%d]\n", i + 1);
+        printf("Descripci\u00f3n: %s\n", t.description);
+        printf("Manager: %s\n", t.dutyManager);
+        printf("Prioridad: %s\n", t.priority ? "Alta" : "Baja");
+        printf("Creaci\u00f3n: %d/%d/%d\n", t.creationDate.day, t.creationDate.month, t.creationDate.year);
+        printf("Vencimiento: %d/%d/%d\n", t.dueDate.day, t.dueDate.month, t.dueDate.year);
+    }
 }
