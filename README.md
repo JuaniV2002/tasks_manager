@@ -25,9 +25,9 @@ To give this program a try on Linux:
   ```
 - Compile the program:
   ```
-  gcc -o expenses expenses.c
+  gcc -o tasks tasks.c
   ```
 - Run the program:
   ```
-  ./expenses
+  ./tasks
   ```
