@@ -1,0 +1,11 @@
+"Prepare Q3 roadmap","Alice",1,1,8,2025,20,8,2025
+"Fix login bug (#342)","Bob",1,31,7,2025,12,8,2025
+"Refactor payment service","Charlie",0,2,8,2025,30,9,2025
+"Write onboarding guide","Diana",0,1,8,2025,25,8,2025
+"Plan team offsite","Eve",0,5,8,2025,15,10,2025
+"Migrate database to v13","Frank",1,3,8,2025,17,8,2025
+"Design new landing page","Grace",0,4,8,2025,1,9,2025
+"Optimize image pipeline","Heidi",0,6,8,2025,10,9,2025
+"Customer interview series","Ivan",0,7,8,2025,28,8,2025
+"Security patch rollout","Judy",1,8,8,2025,11,8,2025
+

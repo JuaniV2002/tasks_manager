@@ -10,9 +10,12 @@ A simple terminal-based task manager written in C. It supports priorities, filte
 - Show tasks: list all tasks with details and indices.
 - Urgent tasks: show only high-priority tasks (highlighted in red).
 - Tasks by manager: filter tasks assigned to a specific manager.
-- Save tasks to file: write tasks to a plain-text `.txt` file.
-- Load tasks from file: read tasks from a previously saved file.
+- Save tasks to file (CSV): write tasks to `tasks.csv` with proper quoting.
+- Load tasks from file (CSV): read tasks from `tasks.csv`.
 - Show tasks sorted by due date: chronological view by due date.
+- Search tasks: find by text in description or manager.
+- Overdue highlighting: shows days remaining, due today, or overdue by N days.
+- Unsaved-changes prompt: offers to save before exiting if you made changes.
 
 ## Setup
 
@@ -42,4 +45,20 @@ gcc -o tasks tasks.c
 
 ```bash
 ./tasks
+
+On start, you’ll be asked for today’s date using the format:
+
+DD/MM/YYYY
+
+When adding or updating a task, enter the due date in the same format.
+
+### CSV format
+
+The program saves to `tasks.csv` with one task per line in this schema:
+
+"description","manager",priority,creation_day,creation_month,creation_year,due_day,due_month,due_year
+
+Notes:
+- Description and manager are quoted, with double quotes escaped by doubling (RFC 4180 style).
+- Priority is 1 (High) or 0 (Low).
 ```

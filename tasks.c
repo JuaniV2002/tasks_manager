@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
+#include <ctype.h>
 
 #define NMAX 100
 #define LMAX 100
@@ -28,11 +30,13 @@ typedef struct Task {
 typedef struct Data {
     TTask tasks[NMAX];
     int elements;
+    TDate currentDate;
+    bool dirty;
 } TData;
 
 bool isEmpty(TData* data);
 bool isFull(TData* data);
-void addTask(TData* data, TDate* date);
+void addTask(TData* data);
 void updateTask(TData* data, int index);
 void deleteTask(TData* data, int index);
 void showTasks(TData* data);
@@ -42,18 +46,29 @@ void saveTasksToFile(TData* data, const char* filename);
 void loadTasksFromFile(TData* data, const char* filename);
 int compareDueDates(const void* a, const void* b);
 void showTasksSortedByDueDate(TData* data);
+void searchTasks(TData* data);
+
+// Helpers
+bool parseDate(const char* input, TDate* out);
+int daysUntil(TDate from, TDate to);
+void printDueInfo(TDate today, TDate due);
+void trimNewline(char* s);
+void toLowerStr(char* s);
+// CSV helpers
+void csv_write_field(FILE* f, const char* s);
+bool csv_parse_line(const char* line, TTask* out);
 
 int main() {
-    TData data = { .elements = 0 };
-    TDate date;
+    TData data = { .elements = 0, .dirty = false };
     int option, index;
 
-    printf("\nEnter today's day: ");
-    scanf("%d", &date.day);
-    printf("Enter today's month: ");
-    scanf("%d", &date.month);
-    printf("Enter today's year: ");
-    scanf("%d", &date.year);
+    char dateStr[LMAX];
+    printf("\nEnter today's date (DD/MM/YYYY): ");
+    scanf(" %99[^\n]", dateStr);
+    if (!parseDate(dateStr, &data.currentDate)) {
+        printf("Invalid date format. Expected DD/MM/YYYY. Exiting.\n");
+        return 1;
+    }
 
     do {
     printf("\n-----------------------------------\n");
@@ -65,15 +80,16 @@ int main() {
     printf("Tasks by manager (6)\n");
     printf("Save tasks to file (7)\n");
     printf("Load tasks from file (8)\n");
-    printf("Show tasks sorted by due date (9)\n");
-    printf("Exit (10)\n");
+        printf("Show tasks sorted by due date (9)\n");
+        printf("Search tasks (10)\n");
+        printf("Exit (11)\n");
     printf("-----------------------------------\n");
     printf("Choose an option: ");
         scanf("%d", &option);
 
         switch (option) {
             case 1:
-                addTask(&data, &date);
+                addTask(&data);
                 break;
             case 2:
                 printf("\nEnter the index of the task to update: ");
@@ -95,15 +111,25 @@ int main() {
                 showTasksByManager(&data);
                 break;
             case 7:
-                saveTasksToFile(&data, "tasks.txt");
+                saveTasksToFile(&data, "tasks.csv");
                 break;
             case 8:
-                loadTasksFromFile(&data, "tasks.txt");
+                loadTasksFromFile(&data, "tasks.csv");
                 break;
             case 9:
                 showTasksSortedByDueDate(&data);
                 break;
             case 10:
+                searchTasks(&data);
+                break;
+            case 11:
+                if (data.dirty) {
+                    printf("\nYou have unsaved changes. Save to tasks.csv before exiting? (y/n): ");
+                    char c; scanf(" %c", &c);
+                    if (c == 'y' || c == 'Y') {
+                        saveTasksToFile(&data, "tasks.csv");
+                    }
+                }
                 return 0;
             default:
                 printf("\nInvalid option\n");
@@ -120,7 +146,7 @@ bool isEmpty(TData* data) {
     return data->elements == 0;
 }
 
-void addTask(TData* data, TDate* date) {
+void addTask(TData* data) {
     if (isFull(data)) {
         printf("\nThe list is full.\n");
         return;
@@ -133,14 +159,15 @@ void addTask(TData* data, TDate* date) {
     scanf(" %99[^\n]", new_task.manager);
     printf("Priority (1 is high, 0 is low): ");
     scanf("%d", &new_task.priority);
-    printf("Due date (day): ");
-    scanf("%d", &new_task.dueDate.day);
-    printf("Due date (month): ");
-    scanf("%d", &new_task.dueDate.month);
-    printf("Due date (year): ");
-    scanf("%d", &new_task.dueDate.year);
+    char dateStr[LMAX];
+    printf("Due date (DD/MM/YYYY): ");
+    scanf(" %99[^\n]", dateStr);
+    if (!parseDate(dateStr, &new_task.dueDate)) {
+        printf("Invalid date format. Task not added.\n");
+        return;
+    }
 
-    new_task.creationDate = *date;
+    new_task.creationDate = data->currentDate;
 
     int pos = 0;
     if (new_task.priority == 1) {
@@ -161,6 +188,7 @@ void addTask(TData* data, TDate* date) {
     }
 
     data->elements++;
+    data->dirty = true;
     printf("\nNew task added successfully!\n");
 }
 
@@ -183,13 +211,14 @@ void updateTask(TData* data, int index) {
     scanf(" %99[^\n]", task->manager);
     printf("New priority (1 is high, 0 is low): ");
     scanf("%d", &task->priority);
-    printf("New due date (day): ");
-    scanf("%d", &task->dueDate.day);
-    printf("New due date (month): ");
-    scanf("%d", &task->dueDate.month);
-    printf("New due date (year): ");
-    scanf("%d", &task->dueDate.year);
+    char dateStr[LMAX];
+    printf("New due date (DD/MM/YYYY): ");
+    scanf(" %99[^\n]", dateStr);
+    if (!parseDate(dateStr, &task->dueDate)) {
+        printf("Invalid date format. Keeping previous due date.\n");
+    }
 
+    data->dirty = true;
     printf("\nThe task at index %d was updated successfully!\n", index + 1);
 }
 
@@ -217,7 +246,7 @@ void deleteTask(TData* data, int index) {
         data->tasks[i] = data->tasks[i + 1];
     }
     data->elements--;
-
+    data->dirty = true;
     printf("\nThe task was deleted successfully!\n");
 }
 
@@ -231,11 +260,12 @@ void showTasks(TData* data) {
     for (int i = 0; i < data->elements; i++) {
         TTask task = data->tasks[i];
         printf("\n[%d]\n", i + 1);
-        printf("Description: %s\n", task.description);
-        printf("Manager: %s\n", task.manager);
-        printf("Priority: %s\n", task.priority ? "High" : "Low");
-        printf("Creation date: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
-        printf("Due date: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
+    printf("Description: %s\n", task.description);
+    printf("Manager: %s\n", task.manager);
+    printf("Priority: %s\n", task.priority ? "High" : "Low");
+    printf("Creation date: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
+    printf("Due date: %d/%d/%d ", task.dueDate.day, task.dueDate.month, task.dueDate.year);
+    printDueInfo(data->currentDate, task.dueDate);
     }
 }
 
@@ -255,7 +285,8 @@ void showUrgentTasks(TData* data) {
             printf("Manager: %s\n", task.manager);
             printf("Priority: High\n");
             printf("Creation date: %d/%d/%d\n", task.creationDate.day, task.creationDate.month, task.creationDate.year);
-            printf("Due date: %d/%d/%d\n", task.dueDate.day, task.dueDate.month, task.dueDate.year);
+            printf("Due date: %d/%d/%d ", task.dueDate.day, task.dueDate.month, task.dueDate.year);
+            printDueInfo(data->currentDate, task.dueDate);
             found = true;
         }
     }
@@ -303,12 +334,16 @@ void saveTasksToFile(TData* data, const char* filename) {
     }
     for (int i = 0; i < data->elements; i++) {
         TTask t = data->tasks[i];
-        fprintf(file, "%s\n%s\n%d\n%d %d %d\n%d %d %d\n",
-                t.description, t.manager, t.priority,
+        // CSV: "description","manager",priority,cd,cm,cy,dd,dm,dy
+        csv_write_field(file, t.description); fputc(',', file);
+        csv_write_field(file, t.manager);    fputc(',', file);
+        fprintf(file, "%d,%d,%d,%d,%d,%d,%d\n",
+                t.priority,
                 t.creationDate.day, t.creationDate.month, t.creationDate.year,
                 t.dueDate.day, t.dueDate.month, t.dueDate.year);
     }
     fclose(file);
+    data->dirty = false;
     printf("\nTasks saved successfully!\n");
 }
 
@@ -319,19 +354,19 @@ void loadTasksFromFile(TData* data, const char* filename) {
         return;
     }
     data->elements = 0;
-    while (!feof(file) && data->elements < NMAX) {
-        TTask* t = &data->tasks[data->elements];
-        if (fgets(t->description, LMAX, file) == NULL) break;
-        t->description[strcspn(t->description, "\n")] = 0;
-        fgets(t->manager, LMAX, file);
-        t->manager[strcspn(t->manager, "\n")] = 0;
-        fscanf(file, "%d", &t->priority);
-        fscanf(file, "%d %d %d", &t->creationDate.day, &t->creationDate.month, &t->creationDate.year);
-        fscanf(file, "%d %d %d", &t->dueDate.day, &t->dueDate.month, &t->dueDate.year);
-        fgetc(file); // Skip newline
-        data->elements++;
+    char line[LMAX * 3];
+    while (fgets(line, sizeof(line), file) && data->elements < NMAX) {
+        trimNewline(line);
+        if (line[0] == '\0') continue;
+        TTask t;
+        if (!csv_parse_line(line, &t)) {
+            printf("Skipping malformed line: %s\n", line);
+            continue;
+        }
+        data->tasks[data->elements++] = t;
     }
     fclose(file);
+    data->dirty = false;
     printf("\nTasks loaded from file!\n");
 }
 
@@ -364,6 +399,136 @@ void showTasksSortedByDueDate(TData* data) {
         printf("Manager: %s\n", t.manager);
         printf("Priority: %s\n", t.priority ? "High" : "Low");
         printf("Creation: %d/%d/%d\n", t.creationDate.day, t.creationDate.month, t.creationDate.year);
-        printf("Due: %d/%d/%d\n", t.dueDate.day, t.dueDate.month, t.dueDate.year);
+        printf("Due: %d/%d/%d ", t.dueDate.day, t.dueDate.month, t.dueDate.year);
+        printDueInfo(data->currentDate, t.dueDate);
     }
+}
+
+void searchTasks(TData* data) {
+    if (isEmpty(data)) {
+        printf("\nThe list is empty.\n");
+        return;
+    }
+    char query[LMAX];
+    printf("Enter text to search (in description or manager): ");
+    scanf(" %99[^\n]", query);
+    char qLower[LMAX];
+    strncpy(qLower, query, LMAX);
+    qLower[LMAX-1] = '\0';
+    toLowerStr(qLower);
+    bool found = false;
+    for (int i = 0; i < data->elements; i++) {
+        char d[LMAX], m[LMAX];
+        strncpy(d, data->tasks[i].description, LMAX); d[LMAX-1]='\0';
+        strncpy(m, data->tasks[i].manager, LMAX);     m[LMAX-1]='\0';
+        toLowerStr(d); toLowerStr(m);
+        if (strstr(d, qLower) || strstr(m, qLower)) {
+            TTask t = data->tasks[i];
+            printf("\n[%d]\n", i + 1);
+            printf("Description: %s\n", t.description);
+            printf("Manager: %s\n", t.manager);
+            printf("Priority: %s\n", t.priority ? "High" : "Low");
+            printf("Creation: %d/%d/%d\n", t.creationDate.day, t.creationDate.month, t.creationDate.year);
+            printf("Due: %d/%d/%d ", t.dueDate.day, t.dueDate.month, t.dueDate.year);
+            printDueInfo(data->currentDate, t.dueDate);
+            found = true;
+        }
+    }
+    if (!found) {
+        printf("No tasks matched your search.\n");
+    }
+}
+
+// ===== Helpers =====
+bool parseDate(const char* input, TDate* out) {
+    int d, m, y;
+    if (sscanf(input, "%d/%d/%d", &d, &m, &y) != 3) return false;
+    if (d < 1 || d > 31 || m < 1 || m > 12 || y < 1) return false;
+    out->day = d; out->month = m; out->year = y;
+    return true;
+}
+
+static time_t to_time(TDate dt) {
+    struct tm t = {0};
+    t.tm_mday = dt.day;
+    t.tm_mon = dt.month - 1;
+    t.tm_year = dt.year - 1900;
+    t.tm_isdst = -1;
+    return mktime(&t);
+}
+
+int daysUntil(TDate from, TDate to) {
+    time_t a = to_time(from);
+    time_t b = to_time(to);
+    double diff = difftime(b, a) / (60*60*24);
+    if (diff > 0) return (int)(diff + 0.5);
+    if (diff < 0) return (int)(diff - 0.5);
+    return 0;
+}
+
+void printDueInfo(TDate today, TDate due) {
+    int d = daysUntil(today, due);
+    if (d > 0) {
+        printf("(%d day%s remaining)\n", d, d==1?"":"s");
+    } else if (d == 0) {
+        printf("(%sDue today%s)\n", GREEN, RESET);
+    } else {
+        int overdue = -d;
+        printf("(%sOVERDUE by %d day%s%s)\n", RED, overdue, overdue==1?"":"s", RESET);
+    }
+}
+
+void trimNewline(char* s) {
+    s[strcspn(s, "\r\n")] = 0;
+}
+
+void toLowerStr(char* s) {
+    for (; *s; ++s) *s = (char)tolower((unsigned char)*s);
+}
+
+void csv_write_field(FILE* f, const char* s) {
+    fputc('"', f);
+    for (const char* p = s; *p; ++p) {
+        if (*p == '"') fputc('"', f); // escape quotes by doubling
+        fputc(*p, f);
+    }
+    fputc('"', f);
+}
+
+static bool csv_read_quoted(const char* line, int* idx, char* out, size_t outsz) {
+    if (line[*idx] != '"') return false;
+    (*idx)++; size_t k = 0;
+    while (line[*idx] && k + 1 < outsz) {
+        char c = line[*idx];
+        (*idx)++;
+        if (c == '"') {
+            if (line[*idx] == '"') { // escaped quote
+                out[k++] = '"';
+                (*idx)++;
+                continue;
+            }
+            // end quote
+            out[k] = '\0';
+            if (line[*idx] == ',') (*idx)++; // consume comma
+            return true;
+        }
+        out[k++] = c;
+    }
+    out[k] = '\0';
+    return false;
+}
+
+bool csv_parse_line(const char* line, TTask* out) {
+    int i = 0;
+    // Skip leading spaces
+    while (line[i] == ' ') i++;
+    if (!csv_read_quoted(line, &i, out->description, LMAX)) return false;
+    if (!csv_read_quoted(line, &i, out->manager, LMAX)) return false;
+    // Now parse the remaining 7 integers
+    int pr, cd, cm, cy, dd, dm, dy;
+    if (sscanf(&line[i], "%d,%d,%d,%d,%d,%d,%d", &pr, &cd, &cm, &cy, &dd, &dm, &dy) != 7) return false;
+    out->priority = pr;
+    out->creationDate.day = cd; out->creationDate.month = cm; out->creationDate.year = cy;
+    out->dueDate.day = dd; out->dueDate.month = dm; out->dueDate.year = dy;
+    return true;
 }
