@@ -71,20 +71,20 @@ int main() {
     }
 
     do {
-    printf("\n-----------------------------------\n");
-    printf("Add new task (1)\n");
-    printf("Update a task (2)\n");
-    printf("Delete a task (3)\n");
-    printf("Show tasks (4)\n");
-    printf("Urgent tasks (5)\n");
-    printf("Tasks by manager (6)\n");
-    printf("Save tasks to file (7)\n");
-    printf("Load tasks from file (8)\n");
+        printf("\n-----------------------------------\n");
+        printf("Add new task (1)\n");
+        printf("Update a task (2)\n");
+        printf("Delete a task (3)\n");
+        printf("Show tasks (4)\n");
+        printf("Urgent tasks (5)\n");
+        printf("Tasks by manager (6)\n");
+        printf("Save tasks to file (7)\n");
+        printf("Load tasks from file (8)\n");
         printf("Show tasks sorted by due date (9)\n");
         printf("Search tasks (10)\n");
         printf("Exit (11)\n");
-    printf("-----------------------------------\n");
-    printf("Choose an option: ");
+        printf("-----------------------------------\n");
+        printf("Choose an option: ");
         scanf("%d", &option);
 
         switch (option) {
